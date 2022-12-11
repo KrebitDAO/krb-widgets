@@ -1,0 +1,39 @@
+{
+  "name": "krb-widgets",
+  "version": "0.0.1",
+  "main": "index.js",
+  "private": true,
+  "packageManager": "yarn@1.22.18",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "dotenv -e .env -- turbo run dev",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "test": "turbo run test",
+    "changeset": "changeset",
+    "version-packages": "changeset version"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:KrebitDAO/krb-widgets.git"
+  },
+  "keywords": [
+    "ethereum",
+    "EIP712",
+    "verifiable-credentials"
+  ],
+  "author": "Krebit <contact@krebit.co>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KrebitDAO/krb-widgets/issues"
+  },
+  "homepage": "https://github.com/KrebitDAO/krb-widgets#readme",
+  "devDependencies": {
+    "@changesets/cli": "^2.25.2",
+    "dotenv-cli": "^6.0.0",
+    "turbo": "^1.6.3"
+  }
+}

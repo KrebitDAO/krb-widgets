@@ -1,0 +1,24 @@
+{
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "out/**"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "parallel": true
+    },
+    "test": {
+      "cache": false,
+      "parallel": true
+    },
+    "start": {},
+    "clean": {
+      "cache": false
+    }
+  },
+  "globalDependencies": [".env"]
+}
