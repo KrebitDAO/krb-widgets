@@ -39,7 +39,11 @@ const Index = () => {
         }
       `}</style>
       <div className="container">
-        <Review identifier="andresmontoya.eth" />
+        <Review
+          krebiter="andresmontoya.eth"
+          proofUrl="https://mirror.xyz/andresmontoya.eth"
+          defaultSkills={['JavaScript', 'React']}
+        />
       </div>
     </>
   );

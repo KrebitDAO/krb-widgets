@@ -1,23 +1,14 @@
-import { ChangeEvent, useContext, useState } from 'react';
+import { ChangeEvent, useContext, useEffect, useState } from 'react';
 import Krebit from '@krebitdao/reputation-passport';
+import { getAddressFromDid } from '@orbisclub/orbis-sdk/utils';
 
 import { Comment, QuestionModalForm, Wrapper } from './styles';
 import { Rating } from '../Rating';
 import { Button } from '../Button';
 import { QuestionModal } from '../QuestionModal';
 import { Input } from '../Input';
-import { generateUID, getCredential } from '../../utils';
+import { generateUID, getCredential, normalizeSchema } from '../../utils';
 import { GeneralContext } from '../../context';
-
-// types
-import { ExternalProvider } from '@ethersproject/providers';
-import { JsonRpcSigner } from '@ethersproject/providers';
-
-interface IWalletInformation {
-  ethProvider: ExternalProvider;
-  address: string;
-  wallet: JsonRpcSigner;
-}
 
 interface IComment {
   picture: string;
@@ -29,25 +20,72 @@ interface IComment {
 }
 
 export interface IReviewProps {
-  identifier: string;
+  krebiter: string;
+  proofUrl: string;
+  defaultSkills: string[];
 }
 
 const reviewValuesInitialState = {
   title: '',
   rating: 2,
-  description: '',
-  proof: '',
-  skills: ''
+  description: ''
 };
 
 export const Review = (props: IReviewProps) => {
-  const { identifier } = props;
+  const { krebiter, proofUrl, defaultSkills } = props;
   const { walletInformation, profileInformation, auth } =
     useContext(GeneralContext);
   const [shouldAddNewComment, setShouldAddNewComment] = useState(false);
   const [taskCompleted, setTaskCompleted] = useState(false);
   const [comments, setComments] = useState<IComment[]>([]);
   const [reviewValues, setReviewValues] = useState(reviewValuesInitialState);
+
+  useEffect(() => {
+    if (!krebiter) return;
+    if (auth.status !== 'resolved') return;
+    if (!walletInformation) return;
+
+    const getComments = async () => {
+      const comments = await walletInformation?.publicPassport?.getCredentials(
+        undefined,
+        'Review'
+      );
+
+      let data = [];
+
+      if (comments.length > 0) {
+        data = await Promise.all(
+          comments.map(async comment => {
+            const values = JSON.parse(comment.credentialSubject.value);
+
+            const { address } = getAddressFromDid(values.entity);
+
+            const reputation = await Krebit.lib.graph.erc20BalanceQuery(
+              address
+            );
+            const profile = await normalizeSchema.profile({
+              orbis: walletInformation.orbis,
+              did: values.entity,
+              reputation
+            });
+
+            return {
+              picture: profile.picture,
+              name: profile.name,
+              comment: {
+                rating: parseInt(values.rating, 10) || 0,
+                description: values.description
+              }
+            };
+          })
+        );
+      }
+
+      setComments(data);
+    };
+
+    getComments();
+  }, [krebiter, auth, walletInformation]);
 
   const handleShouldAddNewComment = () => {
     setShouldAddNewComment(prevValue => !prevValue);
@@ -69,24 +107,22 @@ export const Review = (props: IReviewProps) => {
   const handleSaveReview = async () => {
     if (!walletInformation) return;
 
-    const skills =
-      reviewValues?.skills
-        ?.trim()
-        .split(',')
-        .map(skill => skill.trim()) || [];
+    const { address } = getAddressFromDid(profileInformation.profile.did);
 
     const initialCredential = {
       values: {
         ...reviewValues,
-        issueTo: [identifier],
-        skills: skills.map(skill => {
+        proof: proofUrl || '',
+        entity: profileInformation.authenticatedProfile.did,
+        issueTo: [address],
+        skills: defaultSkills.map(skill => {
           return {
             skillId: skill,
             score: 100
           };
         })
       },
-      tags: skills,
+      tags: defaultSkills,
       verificationUrl: `https://node1.krebit.id/delegated`,
       did: 'did:pkh:eip155:137:0x5AFd488fe9843E51db54B2262F247572926aea5F',
       ethereumAddress: '0x5AFd488fe9843E51db54B2262F247572926aea5F',
@@ -220,7 +256,7 @@ export const Review = (props: IReviewProps) => {
               />
               <Rating
                 name="rating"
-                label="Rating: 5/10"
+                label="Rating: 2.5/5"
                 value={reviewValues.rating}
                 onChange={handleChange}
               />
@@ -230,19 +266,13 @@ export const Review = (props: IReviewProps) => {
                 value={reviewValues.description}
                 onChange={handleChange}
               />
-              <Input
-                type="url"
-                name="proof"
-                placeholder="Proof url"
-                value={reviewValues.proof}
-                onChange={handleChange}
-              />
-              <Input
-                name="skills"
-                placeholder="Skills by comma"
-                value={reviewValues.skills}
-                onChange={handleChange}
-              />
+              <div className="skills-box">
+                {defaultSkills.map((skill, index) => (
+                  <div className="skills-box-item" key={index}>
+                    <p className="skills-box-item-text">{skill}</p>
+                  </div>
+                ))}
+              </div>
             </QuestionModalForm>
           )}
           cancelButton={{

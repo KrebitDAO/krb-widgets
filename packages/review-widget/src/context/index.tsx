@@ -25,7 +25,7 @@ export interface IWalletInformation {
 export const GeneralContext = createContext(undefined);
 
 export const GeneralProvider: FunctionComponent<IProps> = props => {
-  const { children, identifier } = props;
+  const { children, krebiter } = props;
   const [profile, setProfile] = useState<IProfile | undefined>();
   const [authenticatedProfile, setAuthenticatedProfile] = useState<
     IProfile | undefined
@@ -43,13 +43,11 @@ export const GeneralProvider: FunctionComponent<IProps> = props => {
     const isAuthenticated = async () => {
       setStatus('pending');
 
-      if (!identifier) {
-        throw new Error('No identifier defined');
+      if (!krebiter) {
+        throw new Error('No krebiter defined');
       }
 
-      const publicPassport = new Krebit.core.Passport({
-        network: 'polygon'
-      });
+      const publicPassport = new Krebit.core.Passport();
       setPublicPassport(publicPassport);
 
       const orbis = new Orbis();
@@ -58,7 +56,7 @@ export const GeneralProvider: FunctionComponent<IProps> = props => {
       const information = await getWalletInformation();
       setWalletInformation(information);
 
-      await publicPassport.read(identifier);
+      await publicPassport.read(krebiter);
 
       const profile = await normalizeSchema.profile({
         orbis,
@@ -95,7 +93,7 @@ export const GeneralProvider: FunctionComponent<IProps> = props => {
     };
 
     isAuthenticated();
-  }, [identifier]);
+  }, [krebiter]);
 
   const connect = async () => {
     setStatus('pending');

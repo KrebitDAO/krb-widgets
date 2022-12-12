@@ -44,7 +44,7 @@ export const Rating = (props: IProps) => {
             />
           }
           disabled={isDisabled}
-          label={hover !== -1 ? `Rating: ${hover * 2}/10` : label}
+          label={hover !== -1 ? `Rating: ${hover}/5` : label}
         />
       </Wrapper>
     </StyledEngineProvider>

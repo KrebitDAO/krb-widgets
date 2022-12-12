@@ -99,4 +99,25 @@ export const Comment = styled.div<IProps>`
 export const QuestionModalForm = styled.div`
   display: grid;
   grid-gap: 10px;
+
+  .skills-box {
+    display: flex;
+    flex-wrap: wrap;
+    grid-gap: 8px;
+    margin-top: 10px;
+
+    .skills-box-item {
+      border: 1px solid #bdb4fe;
+      border-radius: 20px;
+      padding: 4px 14px;
+      height: 100%;
+      width: fit-content;
+
+      .skills-box-item-text {
+        margin: 0;
+        font-size: 14px;
+        color: #bdb4fe;
+      }
+    }
+  }
 `;
