@@ -31,6 +31,7 @@ export const Wrapper = styled.div<IProps>`
           margin: 0;
           font-size: 16px;
           color: #ffffff;
+          text-decoration: none;
 
           & > span {
             color: cyan;
@@ -83,6 +84,11 @@ export const Comment = styled.div<IProps>`
           margin: 0;
           font-size: 16px;
           color: #ffffff;
+          text-decoration: none;
+
+          & > span {
+            color: cyan;
+          }
         }
       }
     }

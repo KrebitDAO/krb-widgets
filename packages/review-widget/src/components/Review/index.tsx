@@ -13,6 +13,9 @@ import { GeneralContext } from '../../context';
 interface IComment {
   picture: string;
   name: string;
+  did: string;
+  reputation: string;
+  streamId: string;
   comment: {
     rating: number;
     description: string;
@@ -58,10 +61,12 @@ export const Review = (props: IReviewProps) => {
           comments.map(async comment => {
             const values = JSON.parse(comment.credentialSubject.value);
 
-            const { address } = getAddressFromDid(values.entity);
+            const credential = await walletInformation.passport.getCredential(
+              comment.id
+            );
 
             const reputation = await Krebit.lib.graph.erc20BalanceQuery(
-              address
+              credential.issuer.ethereumAddress
             );
             const profile = await normalizeSchema.profile({
               orbis: walletInformation.orbis,
@@ -72,6 +77,9 @@ export const Review = (props: IReviewProps) => {
             return {
               picture: profile.picture,
               name: profile.name,
+              did: profile.did,
+              reputation: profile.reputation,
+              streamId: comment.id,
               comment: {
                 rating: parseInt(values.rating, 10) || 0,
                 description: values.description
@@ -305,10 +313,14 @@ export const Review = (props: IReviewProps) => {
         <div className="user">
           <div className="user-image"></div>
           <div className="user-content">
-            <p className="user-name">
+            <a
+              className="user-name"
+              target="_blank"
+              href={`https://krebit.id/${profileInformation.profile.did}`}
+            >
               {profileInformation.profile.name}{' '}
               <span>{profileInformation.profile.reputation} Krebits</span>
-            </p>
+            </a>
             <p className="user-description">
               {profileInformation.profile.description}
             </p>
@@ -327,14 +339,27 @@ export const Review = (props: IReviewProps) => {
               <div className="comment-header">
                 <div className="comment-header-image"></div>
                 <div className="comment-header-content">
-                  <p className="comment-header-content-name">{comment.name}</p>
-                  <div className="comment-header-content-stars">
+                  <a
+                    className="comment-header-content-name"
+                    target="_blank"
+                    href={`https://krebit.id/${comment.did}`}
+                  >
+                    {comment.name} <span>{comment.reputation} Krebits</span>
+                  </a>
+                  <a
+                    className="comment-header-content-stars"
+                    target="_blank"
+                    href={`https://cerscan.com/mainnet/stream/${comment.streamId.replace(
+                      'ceramic://',
+                      ''
+                    )}`}
+                  >
                     <Rating
                       label=""
                       value={comment.comment.rating}
                       readOnly={true}
                     />
-                  </div>
+                  </a>
                 </div>
               </div>
               <div className="comment-text">{comment.comment.description}</div>
