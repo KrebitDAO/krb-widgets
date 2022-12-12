@@ -1,3 +1,13 @@
-import { Review } from './components/Review';
+import { IReviewProps, Review } from './components/Review';
 
-export default Review;
+import { GeneralProvider } from './context';
+
+const ReviewComponent = (props: IReviewProps) => {
+  return (
+    <GeneralProvider {...props}>
+      <Review {...props} />
+    </GeneralProvider>
+  );
+};
+
+export default ReviewComponent;

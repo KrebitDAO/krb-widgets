@@ -1,22 +1,15 @@
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useContext, useState } from 'react';
 import Krebit from '@krebitdao/reputation-passport';
-import { Orbis } from '@orbisclub/orbis-sdk';
-import LitJsSdk from '@lit-protocol/sdk-browser';
 
 import { Comment, QuestionModalForm, Wrapper } from './styles';
 import { Rating } from '../Rating';
 import { Button } from '../Button';
 import { QuestionModal } from '../QuestionModal';
 import { Input } from '../Input';
-import {
-  generateUID,
-  getCredential,
-  getWalletInformation,
-  normalizeSchema
-} from '../../utils';
+import { generateUID, getCredential } from '../../utils';
+import { GeneralContext } from '../../context';
 
 // types
-import { IProfile } from '../../utils/normalizeSchema';
 import { ExternalProvider } from '@ethersproject/providers';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
@@ -35,7 +28,7 @@ interface IComment {
   };
 }
 
-interface IProps {
+export interface IReviewProps {
   identifier: string;
 }
 
@@ -47,74 +40,22 @@ const reviewValuesInitialState = {
   skills: ''
 };
 
-export const Review = (props: IProps) => {
+export const Review = (props: IReviewProps) => {
   const { identifier } = props;
-  const [profile, setProfile] = useState<IProfile>();
-  const [walletInformation, setWalletInformation] =
-    useState<IWalletInformation>();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { walletInformation, profileInformation, auth } =
+    useContext(GeneralContext);
   const [shouldAddNewComment, setShouldAddNewComment] = useState(false);
+  const [taskCompleted, setTaskCompleted] = useState(false);
   const [comments, setComments] = useState<IComment[]>([]);
   const [reviewValues, setReviewValues] = useState(reviewValuesInitialState);
-
-  useEffect(() => {
-    if (!identifier) {
-      throw new Error('No identifier defined');
-    }
-
-    const getProfile = async () => {
-      const publicPassport = new Krebit.core.Passport({
-        network: 'polygon'
-      });
-      const orbis = new Orbis();
-
-      const information = await getWalletInformation();
-      await publicPassport.read(identifier);
-
-      const profile = await normalizeSchema.profile({
-        orbis,
-        passport: publicPassport
-      });
-
-      const isAuthenticated = await publicPassport.isConnected();
-
-      if (isAuthenticated) {
-        setIsAuthenticated(true);
-      }
-
-      setWalletInformation(information);
-      setProfile(profile);
-    };
-
-    getProfile();
-  }, [identifier]);
-
-  const connect = async () => {
-    if (!walletInformation) return;
-
-    let defaultChainId = '1';
-
-    /** Check if the user trying to connect already has an existing did on Orbis */
-    let defaultDID = await Krebit.lib.orbis.getDefaultDID(
-      walletInformation.address
-    );
-
-    if (defaultDID) {
-      let _didArr = defaultDID.split(':');
-      defaultChainId = _didArr[3];
-    }
-
-    const passport = new Krebit.core.Passport({
-      ...walletInformation,
-      litSdk: LitJsSdk
-    });
-    await passport.connect(null, defaultChainId);
-    setIsAuthenticated(true);
-  };
 
   const handleShouldAddNewComment = () => {
     setShouldAddNewComment(prevValue => !prevValue);
     setReviewValues(reviewValuesInitialState);
+  };
+
+  const handleTaskCompleted = () => {
+    setTaskCompleted(prevValue => !prevValue);
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -156,31 +97,21 @@ export const Review = (props: IProps) => {
     };
 
     try {
-      const issuer = new Krebit.core.Krebit({
-        ...walletInformation,
-        litSdk: LitJsSdk
-      });
-      const passport = new Krebit.core.Passport({
-        ...walletInformation,
-        litSdk: LitJsSdk
-      });
-
-      const session = window.localStorage.getItem('did-session');
-      const currentSession = JSON.parse(session);
-
-      await issuer.connect(currentSession);
-      await passport.connect(currentSession);
-
       // Step 1-A:  Get credential from Master Issuer based on claim:
       // Issue self-signed credential to become an Issuer
       console.log('add: ', walletInformation.address);
-      console.log('did: ', issuer.did);
+      console.log('did: ', walletInformation.issuer.did);
 
-      let typeSchemaUrl = await issuer.getTypeSchema('Issuer');
+      let typeSchemaUrl = await walletInformation.issuer.getTypeSchema(
+        'Issuer'
+      );
 
       if (!typeSchemaUrl) {
         const issuerSchema = Krebit.schemas.claims.issuer;
-        typeSchemaUrl = await issuer.setTypeSchema('Issuer', issuerSchema);
+        typeSchemaUrl = await walletInformation.issuer.setTypeSchema(
+          'Issuer',
+          issuerSchema
+        );
       }
 
       const expirationDate = new Date();
@@ -190,7 +121,7 @@ export const Review = (props: IProps) => {
 
       const claim = {
         id: `issuer-${generateUID(10)}`,
-        did: issuer.did,
+        did: walletInformation.issuer.did,
         ethereumAddress: walletInformation.address,
         type: 'Issuer',
         typeSchema: 'krebit://schemas/issuer',
@@ -200,14 +131,15 @@ export const Review = (props: IProps) => {
       };
       console.log('claim: ', claim);
 
-      const delegatedCredential = await issuer.issue(claim);
+      const delegatedCredential = await walletInformation.issuer.issue(claim);
       console.log('delegatedCredential: ', delegatedCredential);
+
+      let credentialId: string;
 
       // Save delegatedCredential
       if (delegatedCredential) {
-        const delegatedCredentialId = await passport.addIssued(
-          delegatedCredential
-        );
+        const delegatedCredentialId =
+          await walletInformation.passport.addIssued(delegatedCredential);
         console.log('delegatedCredentialId: ', delegatedCredentialId);
 
         // Step 1-B: Send self-signed credential to the Issuer for verification
@@ -220,31 +152,58 @@ export const Review = (props: IProps) => {
 
         // Step 1-C: Get the verifiable credential, and save it to the passport
         if (issuedCredential) {
-          const addedCredentialId = await passport.addCredential(
-            issuedCredential
-          );
+          const addedCredentialId =
+            await walletInformation.passport.addCredential(issuedCredential);
 
+          credentialId = addedCredentialId;
           console.log('addedCredentialId: ', addedCredentialId);
         }
       }
 
-      const newComment = {
-        picture: profile.picture,
-        name: profile.name,
-        comment: {
-          rating: reviewValues.rating,
-          description: reviewValues.description
-        }
-      };
+      const currentConversations =
+        await walletInformation.orbis.getConversations({
+          did: profileInformation.authenticatedProfile.did
+        });
 
-      setComments(prevValues => [newComment, ...prevValues]);
+      const conversationsWithMe = currentConversations?.data?.filter(
+        conversation =>
+          conversation?.recipients.includes(
+            profileInformation.authenticatedProfile.did
+          )
+      );
+      const conversationWithJustMe = conversationsWithMe?.find(
+        conversation => conversation?.recipients?.length === 2
+      );
+
+      let conversationId: string;
+
+      if (!credentialId) return;
+
+      if (conversationWithJustMe) {
+        conversationId = conversationWithJustMe.stream_id;
+      } else {
+        const response = await walletInformation.orbis.createConversation({
+          recipients: [profileInformation.profile.did]
+        });
+
+        conversationId = response.doc;
+      }
+
+      const url = `https://krebit.id/claim/?credential_id=${credentialId}`;
+
+      await walletInformation.orbis.sendMessage({
+        conversation_id: conversationId,
+        body: `hey dude, I just sent you a review, pretty cool work you making hah! ${url}`
+      });
+
       handleShouldAddNewComment();
+      handleTaskCompleted();
     } catch (error) {
       console.error(error);
     }
   };
 
-  if (!profile) return;
+  if (!profileInformation.profile) return;
 
   return (
     <>
@@ -296,19 +255,38 @@ export const Review = (props: IProps) => {
           }}
         />
       )}
-      <Wrapper image={profile.picture}>
+      {taskCompleted && (
+        <QuestionModal
+          title="Task completed!"
+          text={`Thanks, we have sent the review to ${
+            profileInformation.profile.name || ''
+          } for claiming`}
+          cancelButton={{
+            text: 'Close',
+            onClick: handleTaskCompleted
+          }}
+          continueButton={{
+            text: 'Accept',
+            onClick: handleTaskCompleted
+          }}
+        />
+      )}
+      <Wrapper image={profileInformation.profile.picture}>
         <div className="user">
           <div className="user-image"></div>
           <div className="user-content">
             <p className="user-name">
-              {profile.name} <span>{profile.reputation} Krebits</span>
+              {profileInformation.profile.name}{' '}
+              <span>{profileInformation.profile.reputation} Krebits</span>
             </p>
-            <p className="user-description">{profile.description}</p>
+            <p className="user-description">
+              {profileInformation.profile.description}
+            </p>
           </div>
         </div>
         <div className="comment-action">
-          {!isAuthenticated ? (
-            <Button text="Connect" onClick={connect} />
+          {!auth.isAuthenticated ? (
+            <Button text="Connect" onClick={auth.connect} />
           ) : (
             <Button text="Comment" onClick={handleShouldAddNewComment} />
           )}
