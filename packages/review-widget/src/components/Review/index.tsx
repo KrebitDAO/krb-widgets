@@ -122,7 +122,7 @@ export const Review = (props: IReviewProps) => {
       values: {
         ...reviewValues,
         proof: proofUrl || '',
-        entity: 'Persona',
+        entity: 'Personal',
         issueTo: [address],
         skills: defaultSkills.map(skill => {
           return {
