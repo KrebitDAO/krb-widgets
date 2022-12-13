@@ -61,17 +61,18 @@ export const Review = (props: IReviewProps) => {
           comments.map(async comment => {
             const values = JSON.parse(comment.credentialSubject.value);
 
-            const credential = await walletInformation.passport.getCredential(
-              comment.id
-            );
+            const credential =
+              await walletInformation?.publicPassport?.getCredential(
+                comment.id
+              );
 
             const reputation = await Krebit.lib.graph.erc20BalanceQuery(
               credential.issuer.ethereumAddress
             );
             const profile = await normalizeSchema.profile({
-              orbis: walletInformation.orbis,
-              did: values.entity,
-              reputation
+              orbis: walletInformation?.orbis,
+              did: credential.issuer.id,
+              reputation: reputation?.value || 0
             });
 
             return {
@@ -121,7 +122,7 @@ export const Review = (props: IReviewProps) => {
       values: {
         ...reviewValues,
         proof: proofUrl || '',
-        entity: profileInformation.authenticatedProfile.did,
+        entity: 'Persona',
         issueTo: [address],
         skills: defaultSkills.map(skill => {
           return {
