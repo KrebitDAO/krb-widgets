@@ -47,6 +47,7 @@ export const Review = (props: IReviewProps) => {
     if (!krebiter) return;
     if (auth.status !== 'resolved') return;
     if (!walletInformation) return;
+    if (!walletInformation?.publicPassport?.idx) return;
 
     const getComments = async () => {
       const comments = await walletInformation?.publicPassport?.getCredentials(
