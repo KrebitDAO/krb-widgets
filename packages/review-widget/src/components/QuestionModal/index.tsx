@@ -16,6 +16,7 @@ interface IProps {
   };
   text?: string;
   isLoading?: boolean;
+  isDarkMode?: boolean;
   component?: () => ReactElement;
 }
 
@@ -26,11 +27,12 @@ export const QuestionModal = (props: IProps) => {
     cancelButton,
     text,
     isLoading = false,
+    isDarkMode = true,
     component
   } = props;
 
   return (
-    <Wrapper>
+    <Wrapper isDarkMode={isDarkMode}>
       <div className="question-modal-container">
         <div className="question-modal-header">
           <p className="question-modal-header-title">{title}</p>
@@ -53,8 +55,10 @@ export const QuestionModal = (props: IProps) => {
             <Button
               text={cancelButton.text}
               onClick={isLoading ? undefined : cancelButton.onClick}
+              borderBackgroundColor={isDarkMode ? 'bunting' : 'white'}
               styleType="border"
               isDisabled={isLoading}
+              isDarkMode={isDarkMode}
             />
           </div>
           <div className="question-modal-content-button">

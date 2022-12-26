@@ -23,6 +23,7 @@ interface IProps {
   isMultiline?: boolean;
   isDisabled?: boolean;
   isRequired?: boolean;
+  isDarkMode?: boolean;
 }
 
 export const Input = (props: IProps) => {
@@ -35,12 +36,13 @@ export const Input = (props: IProps) => {
     pattern,
     isMultiline = false,
     isDisabled = false,
-    isRequired = false
+    isRequired = false,
+    isDarkMode = true
   } = props;
 
   return (
     <StyledEngineProvider injectFirst>
-      <InputWrapper>
+      <InputWrapper isDarkMode={isDarkMode}>
         <TextField
           name={name}
           label={placeholder}

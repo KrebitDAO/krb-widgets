@@ -13,7 +13,11 @@ interface IProps {
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   isDisabled?: boolean;
   readOnly?: boolean;
+  iconColor?: string;
+  isDarkMode?: boolean;
 }
+
+const DEFAULT_VALUE = 2;
 
 export const Rating = (props: IProps) => {
   const {
@@ -22,29 +26,34 @@ export const Rating = (props: IProps) => {
     value,
     onChange,
     isDisabled = false,
-    readOnly = false
+    readOnly = false,
+    iconColor = 'cyan',
+    isDarkMode = true
   } = props;
   const [hover, setHover] = useState(-1);
 
   return (
     <StyledEngineProvider injectFirst>
-      <Wrapper>
+      <Wrapper iconColor={iconColor} isDarkMode={isDarkMode}>
         <FormControlLabel
           control={
             <MaterialRating
-              value={value || 2.5}
-              onChange={isDisabled ? undefined : onChange}
+              value={value || DEFAULT_VALUE}
+              defaultValue={DEFAULT_VALUE}
               name={name}
               disabled={isDisabled}
               precision={0.5}
+              readOnly={readOnly}
+              onChange={isDisabled ? undefined : onChange}
               onChangeActive={(event, newHover) => {
+                if (isDisabled) return;
+
                 setHover(newHover);
               }}
-              readOnly={readOnly}
             />
           }
           disabled={isDisabled}
-          label={hover !== -1 ? `Rating: ${hover}/5` : label}
+          label={`Rating: ${hover === -1 ? value || DEFAULT_VALUE : hover}/5`}
         />
       </Wrapper>
     </StyledEngineProvider>

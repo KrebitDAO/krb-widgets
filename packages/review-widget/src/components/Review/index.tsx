@@ -7,7 +7,12 @@ import { Rating } from '../Rating';
 import { Button } from '../Button';
 import { QuestionModal } from '../QuestionModal';
 import { Input } from '../Input';
-import { generateUID, getCredential, normalizeSchema } from '../../utils';
+import {
+  generateUID,
+  getCredential,
+  normalizeSchema,
+  sortByDate
+} from '../../utils';
 import { GeneralContext } from '../../context';
 
 interface IComment {
@@ -26,6 +31,7 @@ export interface IReviewProps {
   krebiter: string;
   proofUrl: string;
   defaultSkills: string[];
+  isDarkMode?: boolean;
 }
 
 const reviewValuesInitialState = {
@@ -35,7 +41,7 @@ const reviewValuesInitialState = {
 };
 
 export const Review = (props: IReviewProps) => {
-  const { krebiter, proofUrl, defaultSkills } = props;
+  const { krebiter, proofUrl, defaultSkills, isDarkMode = true } = props;
   const { walletInformation, profileInformation, auth } =
     useContext(GeneralContext);
   const [shouldAddNewComment, setShouldAddNewComment] = useState(false);
@@ -50,9 +56,13 @@ export const Review = (props: IReviewProps) => {
     if (!walletInformation?.publicPassport?.idx) return;
 
     const getComments = async () => {
-      const comments = await walletInformation?.publicPassport?.getCredentials(
+      let comments = await walletInformation?.publicPassport?.getCredentials(
         undefined,
         'Review'
+      );
+
+      comments = comments.sort((a, b) =>
+        sortByDate(a.issuanceDate, b.issuanceDate, 'des')
       );
 
       let data = [];
@@ -122,6 +132,7 @@ export const Review = (props: IReviewProps) => {
     const initialCredential = {
       values: {
         ...reviewValues,
+        rating: reviewValues?.rating ? reviewValues.rating : '2',
         proof: proofUrl || '',
         entity: 'Personal',
         issueTo: [address],
@@ -239,7 +250,7 @@ export const Review = (props: IReviewProps) => {
 
       await walletInformation.orbis.sendMessage({
         conversation_id: conversationId,
-        body: `hey dude, I just sent you a review, pretty cool work you making hah! ${url}`
+        body: `New credential sent: ${url}`
       });
 
       handleShouldAddNewComment();
@@ -256,25 +267,30 @@ export const Review = (props: IReviewProps) => {
       {shouldAddNewComment && (
         <QuestionModal
           title="Add new Review"
+          isDarkMode={isDarkMode}
           component={() => (
-            <QuestionModalForm>
+            <QuestionModalForm isDarkMode={isDarkMode}>
               <Input
                 name="title"
                 placeholder="Review title"
                 value={reviewValues.title}
                 onChange={handleChange}
+                isDarkMode={isDarkMode}
               />
               <Rating
                 name="rating"
                 label="Rating: 2.5/5"
                 value={reviewValues.rating}
                 onChange={handleChange}
+                iconColor={isDarkMode ? 'cyan' : 'heliotrope'}
+                isDarkMode={isDarkMode}
               />
               <Input
                 name="description"
                 placeholder="Write your review notes here"
                 value={reviewValues.description}
                 onChange={handleChange}
+                isDarkMode={isDarkMode}
               />
               <div className="skills-box">
                 {defaultSkills.map((skill, index) => (
@@ -301,6 +317,7 @@ export const Review = (props: IReviewProps) => {
           text={`Thanks, we have sent the review to ${
             profileInformation.profile.name || ''
           } for claiming`}
+          isDarkMode={isDarkMode}
           cancelButton={{
             text: 'Close',
             onClick: handleTaskCompleted
@@ -311,7 +328,10 @@ export const Review = (props: IReviewProps) => {
           }}
         />
       )}
-      <Wrapper image={profileInformation.profile.picture}>
+      <Wrapper
+        image={profileInformation.profile.picture}
+        isDarkMode={isDarkMode}
+      >
         <div className="user">
           <div className="user-image"></div>
           <div className="user-content">
@@ -337,7 +357,11 @@ export const Review = (props: IReviewProps) => {
         </div>
         <div className="comments">
           {comments.map((comment, index) => (
-            <Comment image={comment.picture} key={index}>
+            <Comment
+              image={comment.picture}
+              isDarkMode={isDarkMode}
+              key={index}
+            >
               <div className="comment-header">
                 <div className="comment-header-image"></div>
                 <div className="comment-header-content">
@@ -360,6 +384,8 @@ export const Review = (props: IReviewProps) => {
                       label=""
                       value={comment.comment.rating}
                       readOnly={true}
+                      iconColor={isDarkMode ? 'cyan' : 'heliotrope'}
+                      isDarkMode={isDarkMode}
                     />
                   </a>
                 </div>

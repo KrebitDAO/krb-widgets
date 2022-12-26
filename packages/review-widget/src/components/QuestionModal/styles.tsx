@@ -1,8 +1,12 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 
-export const Wrapper = styled.div`
-  ${({ theme }) => css`
+interface IProps {
+  isDarkMode?: boolean;
+}
+
+export const Wrapper = styled.div<IProps>`
+  ${({ theme, isDarkMode }) => css`
     position: fixed;
     top: 0;
     right: 0;
@@ -10,16 +14,18 @@ export const Wrapper = styled.div`
     z-index: 30;
     width: 100vw;
     height: 100vh;
-    background-color: #ffffff0d;
+    background-color: ${theme.colors.white}0D;
     backdrop-filter: saturate(180%) blur(20px);
     display: flex;
     align-items: center;
     justify-content: center;
 
     .question-modal-container {
-      background-color: #0f1837;
+      background-color: ${isDarkMode
+        ? theme.colors.bunting
+        : theme.colors.white};
       border-radius: 15px;
-      box-shadow: 0px 10px 50px #00000029;
+      box-shadow: ${theme.shadows.smallest};
       padding: 36px 28px;
       width: 577px;
 
@@ -30,15 +36,16 @@ export const Wrapper = styled.div`
 
         .question-modal-header-title {
           margin: 0;
-          font-size: 20px;
-          color: #ffffff;
+          font-size: ${theme.fonts.xl};
+          color: ${isDarkMode ? theme.colors.white : theme.colors.bunting};
         }
 
         .question-modal-header-close {
           cursor: pointer;
           float: right;
+
           & > svg {
-            fill: #ffffff;
+            fill: ${isDarkMode ? theme.colors.white : theme.colors.bunting};
             width: 24px;
             height: 24px;
           }
@@ -56,10 +63,11 @@ export const Wrapper = styled.div`
 
         .question-modal-content-text {
           margin: 0;
-          font-size: 16px;
-          color: #ffffffb3;
+          font-size: ${theme.fonts.base};
+          color: ${isDarkMode ? theme.colors.white : theme.colors.bunting}B3;
         }
       }
+
       .question-modal-content-buttons {
         display: flex;
         grid-gap: 8px;

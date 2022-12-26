@@ -1,7 +1,7 @@
 import Review from '@krebitdao/review-widget';
 
 const Index = props => {
-  const { krebiter, proofUrl, defaultSkills } = props;
+  const { krebiter, proofUrl, defaultSkills, isDarkMode } = props;
 
   return (
     <>
@@ -20,7 +20,7 @@ const Index = props => {
           scroll-behavior: smooth;
           margin: 0;
           padding: 0;
-          background-color: #101828;
+          background-color: ${isDarkMode ? '#101828' : 'white'};
         }
 
         h1,
@@ -45,6 +45,7 @@ const Index = props => {
           krebiter={krebiter}
           proofUrl={proofUrl}
           defaultSkills={defaultSkills}
+          isDarkMode={isDarkMode}
         />
       </div>
     </>
@@ -54,16 +55,24 @@ const Index = props => {
 export async function getServerSideProps(context) {
   const { query } = context;
 
-  const { krebiter, proofUrl, defaultSkills } = query;
+  let { krebiter, proofUrl, defaultSkills, isDarkMode } = query;
 
-  if (!krebiter || !proofUrl || !defaultSkills || defaultSkills?.length === 0) {
+  if (!krebiter || !proofUrl || !defaultSkills) {
     return {
       notFound: true
     };
   }
 
+  defaultSkills = defaultSkills.replace(/'/g, '"');
+  defaultSkills = JSON.parse(defaultSkills);
+
   return {
-    props: { krebiter, proofUrl, defaultSkills }
+    props: {
+      krebiter,
+      proofUrl,
+      defaultSkills,
+      isDarkMode: isDarkMode ? isDarkMode === 'true' : true
+    }
   };
 }
 

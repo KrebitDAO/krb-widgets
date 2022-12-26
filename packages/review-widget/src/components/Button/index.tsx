@@ -8,7 +8,11 @@ interface Props {
   icon?: ReactNode;
   type?: 'button' | 'submit' | 'reset';
   styleType?: 'background' | 'border' | 'border-rounded';
+  primaryColor?: string;
+  secondaryColor?: string;
+  borderBackgroundColor?: string;
   isDisabled?: boolean;
+  isDarkMode?: boolean;
 }
 
 export const Button: FunctionComponent<Props> = props => {
@@ -18,16 +22,24 @@ export const Button: FunctionComponent<Props> = props => {
     icon,
     type = 'button',
     styleType = 'background',
-    isDisabled = false
+    primaryColor = 'heliotrope',
+    secondaryColor = 'cyan',
+    borderBackgroundColor = 'ebony',
+    isDisabled = false,
+    isDarkMode = true
   } = props;
 
   return (
     <Wrapper
       type={type}
       styleType={styleType}
+      primaryColor={primaryColor}
+      secondaryColor={secondaryColor}
+      borderBackgroundColor={borderBackgroundColor}
       onClick={onClick}
       disabled={isDisabled}
       hasIcon={!!icon}
+      isDarkMode={isDarkMode}
     >
       {icon ? icon : text}
     </Wrapper>

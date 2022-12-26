@@ -1,11 +1,16 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 
-export const Wrapper = styled.div`
-  ${({ theme }) => css`
+interface IProps {
+  iconColor?: string;
+  isDarkMode?: boolean;
+}
+
+export const Wrapper = styled.div<IProps>`
+  ${({ theme, iconColor, isDarkMode }) => css`
     .MuiTypography-root {
-      color: #ffffff;
-      font-size: 14px;
+      color: ${isDarkMode ? theme.colors.white : theme.colors.bunting};
+      font-size: ${theme.fonts.base};
     }
 
     .MuiRating-root {
@@ -13,15 +18,15 @@ export const Wrapper = styled.div`
     }
 
     .Mui-disabled {
-      color: #ffffff80 !important;
+      color: ${theme.colors.white}80 !important;
     }
 
     & .MuiRating-iconEmpty {
-      color: #ffffff;
+      color: ${isDarkMode ? theme.colors.white : theme.colors.bunting};
     }
 
     .MuiRating-iconFilled {
-      color: cyan;
+      color: ${theme.colors[iconColor]};
     }
   `}
 `;

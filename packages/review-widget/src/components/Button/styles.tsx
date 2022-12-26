@@ -4,17 +4,29 @@ import styled from '@emotion/styled';
 
 interface IProps {
   styleType: string;
+  primaryColor: string;
+  secondaryColor: string;
+  borderBackgroundColor: string;
   hasIcon: boolean;
+  isDarkMode?: boolean;
 }
 
 export const Wrapper = styled.button<IProps>`
-  ${({ styleType, hasIcon }) => css`
+  ${({
+    theme,
+    styleType,
+    primaryColor,
+    secondaryColor,
+    borderBackgroundColor,
+    hasIcon,
+    isDarkMode = true
+  }) => css`
     border: none;
     outline: none;
     width: 100%;
     height: 100%;
     border-radius: 29px;
-    font-size: 14px;
+    font-size: ${theme.fonts.sm};
     cursor: pointer;
 
     &:disabled {
@@ -31,24 +43,32 @@ export const Wrapper = styled.button<IProps>`
       & > svg {
         width: 24px;
         height: 24px;
-        fill: #00fffe;
+        fill: ${theme.colors.cyan};
 
         & > g > path {
-          fill: #00fffe;
+          fill: ${theme.colors.cyan};
         }
       }
     `}
 
     ${styleType === 'background' &&
     css`
-      background: linear-gradient(to right, #b673fb, cyan);
-      color: #101033;
+      background: linear-gradient(
+        to right,
+        ${theme.colors[primaryColor]},
+        ${theme.colors[secondaryColor]}
+      );
+      color: ${theme.colors.haiti};
     `}
-
+    
     ${styleType === 'border' || styleType == 'border-rounded'
       ? css`
-          background: linear-gradient(to left, #b673fb, cyan);
-          color: cyan;
+          background: linear-gradient(
+            to left,
+            ${theme.colors[primaryColor]},
+            ${theme.colors[secondaryColor]}
+          );
+          color: ${isDarkMode ? theme.colors.cyan : theme.colors.bunting};
           position: relative;
           z-index: 1;
 
@@ -60,7 +80,7 @@ export const Wrapper = styled.button<IProps>`
             top: 1px;
             bottom: 1px;
             border-radius: ${styleType == 'border-rounded' ? '9999px' : '29px'};
-            background-color: #0f1837;
+            background-color: ${theme.colors[borderBackgroundColor]};
             z-index: -1;
           }
         `
