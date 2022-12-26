@@ -43,6 +43,7 @@ const Index = () => {
           krebiter="andresmontoya.eth"
           proofUrl="https://mirror.xyz/andresmontoya.eth"
           defaultSkills={['JavaScript', 'React']}
+          isDarkMode={false}
         />
       </div>
     </>
