@@ -40,9 +40,9 @@ const Index = () => {
       `}</style>
       <div className="container">
         <Review
-          krebiter="andresmontoya.eth"
-          proofUrl="https://mirror.xyz/andresmontoya.eth"
-          defaultSkills={['JavaScript', 'React']}
+          krebiter="0xa4809d5d2986c3330c9cd832bb108f940bec72f3"
+          proofUrl="https://krebit.id/alerios.eth"
+          defaultSkills={['JavaScript', 'Solidity']}
           isDarkMode={false}
         />
       </div>
