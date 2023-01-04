@@ -56,33 +56,31 @@ export const Review = (props: IReviewProps) => {
     if (!walletInformation?.publicPassport?.idx) return;
 
     const getComments = async () => {
-      let comments = await walletInformation?.publicPassport?.getCredentials(
+      let credentials = await walletInformation?.publicPassport?.getCredentials(
         undefined,
         'Review'
       );
 
-      comments = comments.sort((a, b) =>
+      console.log('Reviews: ', comments);
+
+      credentials = credentials.sort((a, b) =>
         sortByDate(a.issuanceDate, b.issuanceDate, 'des')
       );
 
       let data = [];
 
-      if (comments.length > 0) {
+      if (credentials.length > 0) {
         data = await Promise.all(
-          comments.map(async comment => {
-            const values = JSON.parse(comment.credentialSubject.value);
+          credentials.map(async credential => {
+            const values = JSON.parse(credential.credentialSubject.value);
 
-            const credential =
-              await walletInformation?.publicPassport?.getCredential(
-                comment.id
-              );
-
+            console.log('credential: ', credential);
             const reputation = await Krebit.lib.graph.erc20BalanceQuery(
-              credential.issuer.ethereumAddress
+              credential?.issuer?.ethereumAddress
             );
             const profile = await normalizeSchema.profile({
               orbis: walletInformation?.orbis,
-              did: credential.issuer.id,
+              did: credential?.issuer?.id,
               reputation: reputation?.value || 0
             });
 
@@ -91,7 +89,7 @@ export const Review = (props: IReviewProps) => {
               name: profile.name,
               did: profile.did,
               reputation: profile.reputation,
-              streamId: comment.id,
+              streamId: credential.vcId,
               comment: {
                 rating: parseInt(values.rating, 10) || 0,
                 description: values.description
@@ -129,47 +127,22 @@ export const Review = (props: IReviewProps) => {
 
     const { address } = getAddressFromDid(profileInformation.profile.did);
 
-    const initialCredential = {
-      values: {
-        ...reviewValues,
-        rating: reviewValues?.rating ? reviewValues.rating : '2',
-        proof: proofUrl || '',
-        entity: 'Personal',
-        issueTo: [address],
-        skills: defaultSkills.map(skill => {
-          return {
-            skillId: skill,
-            score: 100
-          };
-        })
-      },
-      tags: defaultSkills,
-      verificationUrl: `https://node1.krebit.id/delegated`,
-      did: 'did:pkh:eip155:137:0x5AFd488fe9843E51db54B2262F247572926aea5F',
-      ethereumAddress: '0x5AFd488fe9843E51db54B2262F247572926aea5F',
-      credentialType: 'Review',
-      credentialSchema: 'krebit://schemas/recommendation',
-      credentialSubjectListUrl: '',
-      imageUrl: ''
+    const claimValue = {
+      ...reviewValues,
+      rating: reviewValues?.rating ? reviewValues.rating : '2',
+      proof: proofUrl || '',
+      entity: 'Personal',
+      skills: defaultSkills.map(skill => {
+        return {
+          skillId: skill,
+          score: reviewValues?.rating ? reviewValues?.rating * 20 : 100
+        };
+      })
     };
 
     try {
-      // Step 1-A:  Get credential from Master Issuer based on claim:
-      // Issue self-signed credential to become an Issuer
       console.log('add: ', walletInformation.address);
       console.log('did: ', walletInformation.issuer.did);
-
-      let typeSchemaUrl = await walletInformation.issuer.getTypeSchema(
-        'Issuer'
-      );
-
-      if (!typeSchemaUrl) {
-        const issuerSchema = Krebit.schemas.claims.issuer;
-        typeSchemaUrl = await walletInformation.issuer.setTypeSchema(
-          'Issuer',
-          issuerSchema
-        );
-      }
 
       const expirationDate = new Date();
       const expiresYears = 1;
@@ -177,44 +150,35 @@ export const Review = (props: IReviewProps) => {
       console.log('expirationDate: ', expirationDate);
 
       const claim = {
-        id: `issuer-${generateUID(10)}`,
-        did: walletInformation.issuer.did,
-        ethereumAddress: walletInformation.address,
-        type: 'Issuer',
-        typeSchema: 'krebit://schemas/issuer',
-        tags: ['Community', `${initialCredential.credentialType}Issuer`],
-        value: initialCredential,
-        expirationDate: new Date(expirationDate).toISOString()
+        id: `review-${generateUID(10)}`,
+        did: `did:pkh:eip155:1:${address.toLowerCase()}`,
+        ethereumAddress: address.toLowerCase(),
+        tags: ['Community'].concat(defaultSkills),
+        type: 'Review',
+        typeSchema: 'krebit://schemas/recommendation',
+        value: claimValue,
+        expirationDate: new Date(expirationDate).toISOString(),
+        trust: claimValue?.rating
+          ? parseInt(claimValue?.rating as string) * 20
+          : 100
       };
       console.log('claim: ', claim);
 
-      const delegatedCredential = await walletInformation.issuer.issue(claim);
-      console.log('delegatedCredential: ', delegatedCredential);
+      const issuedCredential = await walletInformation.issuer.issue(claim);
+      console.log('issuedCredential: ', issuedCredential);
 
       let credentialId: string;
 
-      // Save delegatedCredential
-      if (delegatedCredential) {
-        const delegatedCredentialId =
-          await walletInformation.passport.addIssued(delegatedCredential);
-        console.log('delegatedCredentialId: ', delegatedCredentialId);
+      // Step 1-C: Get the verifiable credential, and save it to the passport
+      if (issuedCredential) {
+        console.log('issued:', await walletInformation.passport.getIssued());
 
-        // Step 1-B: Send self-signed credential to the Issuer for verification
-        const issuedCredential = await getCredential({
-          verifyUrl: 'https://node1.krebit.id/issuer',
-          claimedCredentialId: delegatedCredentialId
-        });
+        const issuedCredentialId = await walletInformation.passport.addIssued(
+          issuedCredential
+        );
 
-        console.log('issuedCredential: ', issuedCredential);
-
-        // Step 1-C: Get the verifiable credential, and save it to the passport
-        if (issuedCredential) {
-          const addedCredentialId =
-            await walletInformation.passport.addCredential(issuedCredential);
-
-          credentialId = addedCredentialId;
-          console.log('addedCredentialId: ', addedCredentialId);
-        }
+        credentialId = issuedCredentialId;
+        console.log('issuedCredentialId: ', issuedCredentialId);
       }
 
       const currentConversations =
@@ -250,7 +214,7 @@ export const Review = (props: IReviewProps) => {
 
       await walletInformation.orbis.sendMessage({
         conversation_id: conversationId,
-        body: `New credential sent: ${url}`
+        body: `Hi, I just sent you a review, you can claim it here: ${url}`
       });
 
       handleShouldAddNewComment();
