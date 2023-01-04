@@ -33,13 +33,14 @@
   },
   "peerDependencies": {
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "@biconomy/mexa": "2.0.35"
   },
   "dependencies": {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@krebitdao/eip712-vc": "^1.0.3",
-    "@krebitdao/reputation-passport": "^1.0.7",
+    "@krebitdao/reputation-passport": "^1.0.8",
     "@lit-protocol/sdk-browser": "^1.1.238",
     "@mui/material": "^5.10.17",
     "date-fns": "^2.29.3",

@@ -10,10 +10,14 @@
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf .next && rm -rf out"
   },
   "dependencies": {
+    "@biconomy/mexa": "^3.0.5",
     "@krebitdao/review-widget": "*",
     "next": "^13.0.6",
     "next-transpile-modules": "^10.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "request": "^2.88.2",
+    "request-promise": "4.2.6",
+    "request-promise-core": "1.1.4"
   }
 }
