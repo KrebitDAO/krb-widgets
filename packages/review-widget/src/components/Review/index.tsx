@@ -2,11 +2,12 @@ import { ChangeEvent, useContext, useEffect, useState } from 'react';
 import Krebit from '@krebitdao/reputation-passport';
 import { getAddressFromDid } from '@orbisclub/orbis-sdk/utils';
 
-import { Comment, QuestionModalForm, Wrapper } from './styles';
+import { Comment, LoadingWrapper, QuestionModalForm, Wrapper } from './styles';
 import { Rating } from '../Rating';
 import { Button } from '../Button';
 import { QuestionModal } from '../QuestionModal';
 import { Input } from '../Input';
+import { Loading } from '../Loading';
 import {
   generateUID,
   getCredential,
@@ -224,7 +225,13 @@ export const Review = (props: IReviewProps) => {
     }
   };
 
-  if (!profileInformation.profile) return;
+  if (!profileInformation.profile) {
+    return (
+      <LoadingWrapper>
+        <Loading isDarkMode={isDarkMode} />
+      </LoadingWrapper>
+    );
+  }
 
   return (
     <>

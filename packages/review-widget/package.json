@@ -45,6 +45,7 @@
     "@mui/material": "^5.10.17",
     "date-fns": "^2.29.3",
     "ethers": "^5.7.2",
+    "request": "^2.88.2",
     "siwe": "^1.1.6"
   },
   "devDependencies": {

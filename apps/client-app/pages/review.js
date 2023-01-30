@@ -1,6 +1,6 @@
 import Review from '@krebitdao/review-widget';
 
-const Index = props => {
+const ReviewPage = props => {
   const { krebiter, proofUrl, defaultSkills, isDarkMode } = props;
 
   return (
@@ -76,4 +76,4 @@ export async function getServerSideProps(context) {
   };
 }
 
-export default Index;
+export default ReviewPage;

@@ -133,3 +133,12 @@ export const QuestionModalForm = styled.div<IProps>`
     }
   `}
 `;
+
+export const LoadingWrapper = styled.div`
+  ${({ theme }) => css`
+    margin: 0 auto;
+    margin-top: 20px;
+    width: 50px;
+    height: 50px;
+  `}
+`;
