@@ -28,14 +28,7 @@ export interface IProfile {
   reputation: string | number;
   countFollowers: number;
   countFollowing: number;
-  isFollowingUser?: boolean;
-  ensDomain?: string;
-  unsDomain?: string;
   orbisMetadata?: any;
-  personhoods?: ICredential[];
-  works?: ICredential[];
-  communities?: ICredential[];
-  skills?: string[];
 }
 
 export const profile = async (props: IProps) => {

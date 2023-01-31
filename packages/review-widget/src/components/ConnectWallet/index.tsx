@@ -1,0 +1,161 @@
+import { FunctionComponent, useContext, useState } from 'react';
+
+import { Wrapper, WalletButton, GlobalStyle } from './styles';
+import { Loading } from '../Loading';
+import { Checkbox } from '../Checkbox';
+import { Close, Login } from '../Icons';
+import { GeneralContext } from '../../context';
+
+interface IProps {
+  onClose: () => void;
+  isOpen: boolean;
+  isDarkMode?: boolean;
+}
+
+export const ConnectWallet: FunctionComponent<IProps> = props => {
+  const { isOpen = false, onClose, isDarkMode = true } = props;
+  const [status, setStatus] = useState('idle');
+  const [shouldRememberSession, setShouldRememberSession] = useState(true);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(true);
+  const {
+    auth: { connect, handleRememberSession }
+  } = useContext(GeneralContext);
+
+  const handleConnect = async (type: string) => {
+    try {
+      setStatus('pending');
+
+      if (!shouldRememberSession) {
+        handleRememberSession();
+      }
+
+      const data = await connect(type);
+
+      if (data) {
+        setStatus('resolved');
+        onClose();
+      }
+    } catch (error) {
+      console.error('connect wallet function error: ', error);
+      setStatus('rejected');
+    }
+  };
+
+  const handleShouldRememberSession = () => {
+    setShouldRememberSession(prevValue => !prevValue);
+  };
+
+  const handleHasAcceptedTerms = () => {
+    setHasAcceptedTerms(prevValue => !prevValue);
+  };
+
+  if (!isOpen) return;
+
+  return (
+    <>
+      <GlobalStyle />
+      <Wrapper status={status} isDarkMode={isDarkMode}>
+        <div className="wallet">
+          {status === 'pending' ? (
+            <>
+              <p className="loading-title">
+                Connecting to decentralized identity
+              </p>
+              <div className="loading-view">
+                <div className="loading-view-container">
+                  <Loading />
+                </div>
+                <p className="loading-view-text">Authorizing your wallet</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="wallet-header">
+                <p className="wallet-header-title">Connect your Wallet</p>
+                <div className="wallet-header-close" onClick={onClose}>
+                  <Close />
+                </div>
+              </div>
+              <div className="wallet-buttons">
+                <WalletButton
+                  textColor="tango"
+                  disabled={!hasAcceptedTerms}
+                  onClick={() => handleConnect('metamask')}
+                >
+                  <img
+                    src="https://krebit.id/imgs/logos/metamask.png"
+                    width={24}
+                    height={24}
+                  />{' '}
+                  Metamask
+                </WalletButton>
+                <WalletButton
+                  textColor={isDarkMode ? 'white' : 'bunting'}
+                  disabled={!hasAcceptedTerms}
+                  onClick={() => handleConnect('wallet_connect')}
+                >
+                  <img
+                    src="https://krebit.id/imgs/logos/wallet-connect.png"
+                    width={30}
+                    height={24}
+                  />{' '}
+                  Wallet connect
+                </WalletButton>
+                <WalletButton
+                  textColor={isDarkMode ? 'periwinkle' : 'electricViolet'}
+                  disabled={!hasAcceptedTerms}
+                  onClick={() => handleConnect('web3auth')}
+                  isDarkMode={isDarkMode}
+                >
+                  <Login /> Email / Social Login
+                </WalletButton>
+              </div>
+              <div className="wallet-remember-session">
+                <Checkbox
+                  placeholder="Remember session"
+                  name="remember"
+                  value={shouldRememberSession}
+                  onChange={handleShouldRememberSession}
+                  isDarkMode={isDarkMode}
+                />
+              </div>
+              <div className="wallet-terms">
+                <Checkbox
+                  placeholder=""
+                  name="tems"
+                  value={hasAcceptedTerms}
+                  onChange={handleHasAcceptedTerms}
+                  isDarkMode={isDarkMode}
+                />
+                <p className="wallet-terms-text">
+                  I have read and accept the{' '}
+                  <a
+                    className="wallet-terms-text-link"
+                    href="https://krebit.id/terms"
+                  >
+                    terms
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    className="wallet-terms-text-link"
+                    href="https://krebit.id/privacy"
+                  >
+                    privacy policy
+                  </a>
+                  .
+                </p>
+              </div>
+              <a
+                className="wallet-read"
+                href="https://metamask.io/download/"
+                target="_blank"
+              >
+                I don't have a wallet
+              </a>
+            </>
+          )}
+        </div>
+      </Wrapper>
+    </>
+  );
+};

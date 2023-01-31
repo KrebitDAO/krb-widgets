@@ -6,6 +6,7 @@ import { Comment, LoadingWrapper, QuestionModalForm, Wrapper } from './styles';
 import { Rating } from '../Rating';
 import { Button } from '../Button';
 import { QuestionModal } from '../QuestionModal';
+import { ConnectWallet } from '../ConnectWallet';
 import { Input } from '../Input';
 import { Loading } from '../Loading';
 import {
@@ -43,7 +44,7 @@ const reviewValuesInitialState = {
 
 export const Review = (props: IReviewProps) => {
   const { krebiter, proofUrl, defaultSkills, isDarkMode = true } = props;
-  const { walletInformation, profileInformation, auth } =
+  const { walletInformation, profileInformation, auth, walletModal } =
     useContext(GeneralContext);
   const [shouldAddNewComment, setShouldAddNewComment] = useState(false);
   const [taskCompleted, setTaskCompleted] = useState(false);
@@ -225,7 +226,7 @@ export const Review = (props: IReviewProps) => {
     }
   };
 
-  if (!profileInformation.profile) {
+  if (auth.status === 'idle' || auth.status === 'pending') {
     return (
       <LoadingWrapper>
         <Loading isDarkMode={isDarkMode} />
@@ -235,6 +236,11 @@ export const Review = (props: IReviewProps) => {
 
   return (
     <>
+      <ConnectWallet
+        isDarkMode={isDarkMode}
+        isOpen={walletModal.openConnectWallet}
+        onClose={walletModal.handleOpenConnectWallet}
+      />
       {shouldAddNewComment && (
         <QuestionModal
           title="Add new Review"
@@ -321,7 +327,10 @@ export const Review = (props: IReviewProps) => {
         </div>
         <div className="comment-action">
           {!auth.isAuthenticated ? (
-            <Button text="Connect" onClick={auth.connect} />
+            <Button
+              text="Connect"
+              onClick={walletModal.handleOpenConnectWallet}
+            />
           ) : (
             <Button text="Comment" onClick={handleShouldAddNewComment} />
           )}
