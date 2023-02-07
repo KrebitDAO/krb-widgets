@@ -13,6 +13,7 @@ import {
   generateUID,
   getCredential,
   normalizeSchema,
+  sendNotification,
   sortByDate
 } from '../../utils';
 import { GeneralContext } from '../../context';
@@ -183,40 +184,16 @@ export const Review = (props: IReviewProps) => {
         console.log('issuedCredentialId: ', issuedCredentialId);
       }
 
-      const currentConversations =
-        await walletInformation.orbis.getConversations({
-          did: profileInformation.authenticatedProfile.did
-        });
-
-      const conversationsWithMe = currentConversations?.data?.filter(
-        conversation =>
-          conversation?.recipients.includes(
-            profileInformation.authenticatedProfile.did
-          )
-      );
-      const conversationWithJustMe = conversationsWithMe?.find(
-        conversation => conversation?.recipients?.length === 2
-      );
-
-      let conversationId: string;
-
-      if (!credentialId) return;
-
-      if (conversationWithJustMe) {
-        conversationId = conversationWithJustMe.stream_id;
-      } else {
-        const response = await walletInformation.orbis.createConversation({
-          recipients: [profileInformation.profile.did]
-        });
-
-        conversationId = response.doc;
-      }
-
       const url = `https://krebit.id/claim/?credential_id=${credentialId}`;
 
-      await walletInformation.orbis.sendMessage({
-        conversation_id: conversationId,
-        body: `Hi, I just sent you a review, you can claim it here: ${url}`
+      await sendNotification({
+        orbis: walletInformation?.orbis,
+        authenticatedDID: profileInformation.authenticatedProfile.did,
+        body: {
+          subject: `Krebit.id Notification: ${claimValue?.title}`,
+          content: `Hi, I just sent you a review, you can claim it here: ${url}`,
+          recipients: [address]
+        }
       });
 
       handleShouldAddNewComment();
